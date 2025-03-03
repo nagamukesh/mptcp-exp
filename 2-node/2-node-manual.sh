@@ -9,6 +9,9 @@
 
 #!/bin/sh
 
+# Clean up existing namespaces
+ip -all netns delete
+
 # Create network namespaces
 ip netns add h1
 ip netns add h2
@@ -40,6 +43,8 @@ ip netns exec h1 tc qdisc add dev eth1b root netem delay 10ms rate 5mbit
 ip netns exec h2 tc qdisc add dev eth2a root netem delay 5ms rate 10mbit
 ip netns exec h2 tc qdisc add dev eth2b root netem delay 10ms rate 5mbit
 
+ip -n h1 mptcp endpoint flush
+
 # Turn ON all ethernet devices
 ip -n h1 link set lo up
 ip -n h2 link set lo up
@@ -48,21 +53,20 @@ ip -n h1 link set eth1b up
 ip -n h2 link set eth2a up
 ip -n h2 link set eth2b up
 
-# Flush existing MPTCP endpoints
-ip -n h1 mptcp endpoint flush
-
-# Manually creating subflows
-ip -n h1 mptcp endpoint add 10.0.0.1 dev eth1a subflow
-ip -n h1 mptcp endpoint add 192.168.0.1 dev eth1b subflow
-ip -n h2 mptcp endpoint add 10.0.0.2 dev eth2a subflow
-ip -n h2 mptcp endpoint add 192.168.0.2 dev eth2b subflow
-
 # Enable IP forwarding
 ip netns exec h2 sysctl -w net.ipv4.ip_forward=1
 
 # Create two routing tables for two interfaces in h1
 ip netns exec h1 ip rule add from 10.0.0.1 table 1
 ip netns exec h1 ip rule add from 192.168.0.1 table 2
+
+# Add MPTCP subflows in h1
+ip netns exec h1 ip mptcp endpoint add 10.0.0.1 dev eth1a subflow
+ip netns exec h1 ip mptcp endpoint add 192.168.0.1 dev eth1b subflow
+
+# Add MPTCP subflows in h2
+ip netns exec h2 ip mptcp endpoint add 10.0.0.2 dev eth2a subflow
+ip netns exec h2 ip mptcp endpoint add 192.168.0.2 dev eth2b subflow
 
 # Configure the two routing tables
 ip netns exec h1 ip route add default via 10.0.0.2 dev eth1a table 1
