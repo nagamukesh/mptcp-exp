@@ -1,4 +1,16 @@
+############################################## 
+# Topology                                   #
+#  _______   10mbit, 5ms     _______         #     
+# |       |-----------------|       |        #      
+# |  h1   |                 |  h2   |        #
+# |_______|-----------------|_______|        #      
+#             5mbit, 10ms                    #
+##############################################
+
 #!/bin/sh
+
+# Clean up previous namespaces
+ip -all netns delete
 
 # Create network namespaces
 ip netns add h1

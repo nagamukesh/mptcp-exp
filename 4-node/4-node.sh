@@ -11,6 +11,7 @@
 
 #!/bin/sh
 
+# Clean up previous namespaces
 ip -all netns delete
 
 #Create four network namespaces: h1 and h2
@@ -87,9 +88,9 @@ ip -n h2 mptcp limits set subflow 2 add_addr_accepted 2
 
 # Path Management 'in-kernel' using ip mptcp
 ip -n h2 mptcp endpoint add 192.168.1.2 dev eth4b id 1 signal
-ip -n h2 mptcp endpoint add 10.0.1.2 dev eth4b id 1 signal
+ip -n h2 mptcp endpoint add 10.0.1.2 dev eth4b id 2 signal
 ip -n h1 mptcp endpoint add 192.168.0.1 dev eth2a id 1 fullmesh
-ip -n h1 mptcp endpoint add 10.0.0.1 dev eth2a id 1 fullmesh
+ip -n h1 mptcp endpoint add 10.0.0.1 dev eth2a id 2 fullmesh
 
 # Enable IP forwarding
 ip netns exec r1 sysctl -w net.ipv4.ip_forward=1
